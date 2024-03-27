@@ -1,8 +1,12 @@
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 public class ShortestPathUsingLevita {
     static class Edge {
-        int source, destination, weight; // начальной вершине, конечной вершине,весе ребра
+        int source, destination, weight; // начальная вершина, конечная вершина,вес ребра
 
         public Edge(int source, int destination, int weight) {
             this.source = source;
@@ -49,7 +53,7 @@ public class ShortestPathUsingLevita {
                         if (count[edge.destination] > vertices) {
                             System.out.println("Graph contains negative cycle");
                             long endTime = System.nanoTime();
-                            System.out.println("Elapsed Time: " + (endTime - startTime)/1000000 + " милисекунды");
+                            System.out.println("Затраченное время: " + (endTime - startTime)/1000000 + " миллисекунды");
                             System.out.println("Number of iterations: " + iterations);
                             return;
                         }
@@ -60,7 +64,7 @@ public class ShortestPathUsingLevita {
         }
 
         long endTime = System.nanoTime();
-        System.out.println("Elapsed Time: " + (endTime - startTime)/1000000 + " милисекунды");
+        System.out.println("Затраченное время: " + (endTime - startTime)/1000000 + " миллисекунды");
         System.out.println("количество итераций: " + iterations);
 
         System.out.println("Кратчайшие расстояния от вершины " + start + ":");
@@ -69,24 +73,70 @@ public class ShortestPathUsingLevita {
         }
     }
 
+    public static void generateGraphDataToFile(String filename,  int minVertices, int maxVertices) {
+        try {
+            FileWriter writer = new FileWriter(filename);
+            Random random = new Random();
+            int numGraphs = random.nextInt(51) + 50; // Генерируем случайное число от 50 до 100
+            System.out.println("Создано " + numGraphs + " графов.");
+            for (int g = 0; g < numGraphs; g++) {
+                vertices = random.nextInt(maxVertices - minVertices + 1) + minVertices;
+                int edges = random.nextInt(vertices * (vertices - 1) / 2 + 1); // Случайное количество рёбер
+
+                // Записываем количество вершин и рёбер в файл
+                writer.write(vertices + " " + edges + "\n");
+
+                // Записываем каждое ребро (случайные вершины и вес)
+                for (int i = 0; i < edges; i++) {
+                    int source = random.nextInt(vertices);
+                    int destination = random.nextInt(vertices);
+                    int weight = random.nextInt(100) + 1; // Принимаем случайные веса от 1 до 100
+                    writer.write(source + " " + destination + " " + weight + "\n");
+                }
+            }
+
+            writer.close();
+
+        } catch (IOException e) {
+            System.out.println("Ошибка при создании файла: " + e.getMessage());
+        }
+    }
+
     public static void main(String[] args) {
-        vertices = 5;
-        graph = new ArrayList<>(vertices);
-        for (int i = 0; i < vertices; i++) {
-            graph.add(new ArrayList<>());
+        // Путь к файлу с данными графа
+        String filename = "graphs_data.txt";
+
+        // Генерация данных графа и запись в файл
+        generateGraphDataToFile(filename,  100, 1000);
+
+        // Чтение графа из файла
+        try {
+            Scanner scanner = new Scanner(new File(filename));
+
+            vertices = scanner.nextInt(); // Считываем количество вершин
+            int edges = scanner.nextInt(); // Считываем количество рёбер
+            graph = new ArrayList<>(vertices);
+
+            // Инициализация списка смежности
+            for (int i = 0; i < vertices; i++) {
+                graph.add(new ArrayList<>());
+            }
+
+            // Считываем рёбра из файла
+            for (int i = 0; i < edges; i++) {
+                int source = scanner.nextInt();
+                int destination = scanner.nextInt();
+                int weight = scanner.nextInt();
+                addEdge(source, destination, weight);
+            }
+
+            scanner.close();
+        } catch (FileNotFoundException e) {
+            System.out.println("Файл не найден: " + e.getMessage());
+            return;
         }
 
-        addEdge(0, 1, 6);
-        addEdge(0, 2, 7);
-        addEdge(1, 2, 8);
-        addEdge(1, 3, -4);
-        addEdge(1, 4, 5);
-        addEdge(2, 3, 9);
-        addEdge(2, 4, -3);
-        addEdge(3, 1, 7);
-        addEdge(4, 0, 2);
-        addEdge(4, 3, 7);
-
+        // Выполнение алгоритма Левита
         levitaAlgorithm(0);
     }
 }
