@@ -107,7 +107,7 @@ public class ShortestPathUsingLevita {
         String filename = "graphs_data.txt";
 
         // Генерация данных графа и запись в файл
-        generateGraphDataToFile(filename,  100, 1000);
+        generateGraphDataToFile(filename,  100, 10000);
 
         // Чтение графа из файла
         try {
