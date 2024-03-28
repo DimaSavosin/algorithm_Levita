@@ -22,7 +22,7 @@ public class ShortestPathUsingLevita {
         graph.get(source).add(new Edge(source, destination, weight));
     }
 
-    public static void levitaAlgorithm(int start) {
+    public static void levitaAlgorithm(int start, int vertices, int edges) {
         int[] distance = new int[vertices];
         Arrays.fill(distance, Integer.MAX_VALUE);
         distance[start] = 0;
@@ -36,41 +36,35 @@ public class ShortestPathUsingLevita {
 
         int iterations = 0;
 
-        long startTime = System.nanoTime();
+        long startTime = System.currentTimeMillis();
 
         while (!queue.isEmpty()) {
-            int current = queue.poll();
-            inQueue[current] = false;
+            int size = queue.size();
+            for (int i = 0; i < size; i++) {
+                int current = queue.poll();
+                inQueue[current] = false;
 
-            for (Edge edge : graph.get(current)) {
-                int newDistance = distance[current] + edge.weight;
-                if (newDistance < distance[edge.destination]) {
-                    distance[edge.destination] = newDistance;
-                    if (!inQueue[edge.destination]) {
-                        queue.offer(edge.destination);
-                        inQueue[edge.destination] = true;
-                        count[edge.destination]++;
-                        if (count[edge.destination] > vertices) {
-                            System.out.println("Graph contains negative cycle");
-                            long endTime = System.nanoTime();
-                            System.out.println("Затраченное время: " + (endTime - startTime)/1000000 + " миллисекунды");
-                            System.out.println("Number of iterations: " + iterations);
-                            return;
+                for (Edge edge : graph.get(current)) {
+                    int newDistance = distance[current] + edge.weight;
+                    if (newDistance < distance[edge.destination]) {
+                        distance[edge.destination] = newDistance;
+                        if (!inQueue[edge.destination]) {
+                            queue.offer(edge.destination);
+                            inQueue[edge.destination] = true;
+                            count[edge.destination]++;
+                            if (count[edge.destination] > vertices) {
+                                System.out.println("Graph contains negative cycle");
+                                return;
+                            }
                         }
                     }
+                    iterations++;
                 }
-                iterations++;
             }
         }
+        long endTime = System.currentTimeMillis();
+        System.out.println((endTime - startTime) + " " + iterations + " " + (vertices * edges));
 
-        long endTime = System.nanoTime();
-        System.out.println("Затраченное время: " + (endTime - startTime)/1000000 + " миллисекунды");
-        System.out.println("количество итераций: " + iterations);
-
-        System.out.println("Кратчайшие расстояния от вершины " + start + ":");
-        for (int i = 0; i < vertices; i++) {
-            System.out.println("Вершина " + i + ": " + distance[i]);
-        }
     }
 
     public static void generateGraphDataToFile(String filename,  int minVertices, int maxVertices) {
@@ -105,29 +99,40 @@ public class ShortestPathUsingLevita {
     public static void main(String[] args) {
         // Путь к файлу с данными графа
         String filename = "graphs_data.txt";
-
         // Генерация данных графа и запись в файл
-        generateGraphDataToFile(filename,  100, 10000);
+        generateGraphDataToFile(filename, 100, 1000);
+        System.out.println("Время " + "Итерации " + "Размер_входных_данных");
 
         // Чтение графа из файла
         try {
             Scanner scanner = new Scanner(new File(filename));
 
-            vertices = scanner.nextInt(); // Считываем количество вершин
-            int edges = scanner.nextInt(); // Считываем количество рёбер
-            graph = new ArrayList<>(vertices);
+            while (scanner.hasNextLine()) {
+                if (!scanner.hasNextInt()) {
+                    break; // Проверяем, есть ли следующее целое число в файле
+                }
+                vertices = scanner.nextInt(); // Считываем количество вершин
+                int edges = scanner.nextInt(); // Считываем количество рёбер
+                graph = new ArrayList<>(vertices);
 
-            // Инициализация списка смежности
-            for (int i = 0; i < vertices; i++) {
-                graph.add(new ArrayList<>());
-            }
+                // Инициализация списка смежности
+                for (int i = 0; i < vertices; i++) {
+                    graph.add(new ArrayList<>());
+                }
 
-            // Считываем рёбра из файла
-            for (int i = 0; i < edges; i++) {
-                int source = scanner.nextInt();
-                int destination = scanner.nextInt();
-                int weight = scanner.nextInt();
-                addEdge(source, destination, weight);
+                // Считываем рёбра из файла
+                for (int i = 0; i < edges; i++) {
+                    if (!scanner.hasNextInt()) {
+                        break; // Проверяем, есть ли следующее целое число в файле
+                    }
+                    int source = scanner.nextInt();
+                    int destination = scanner.nextInt();
+                    int weight = scanner.nextInt();
+                    addEdge(source, destination, weight);
+                }
+
+                // Выполнение алгоритма Левита для текущего графа
+                levitaAlgorithm(0,vertices,edges);
             }
 
             scanner.close();
@@ -135,8 +140,7 @@ public class ShortestPathUsingLevita {
             System.out.println("Файл не найден: " + e.getMessage());
             return;
         }
-
-        // Выполнение алгоритма Левита
-        levitaAlgorithm(0);
     }
+
+
 }
